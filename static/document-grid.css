@@ -1,0 +1,299 @@
+/* 
+MARK: Basic styles, always applied 
+*/
+.document_card_grid {
+  container-type: inline-size;
+}
+
+.document_card {
+  margin-bottom: 0;
+  height: 100%;
+  padding: 0;
+  display: grid;
+  overflow: hidden;
+}
+
+.document_card__media {
+  grid-area: media;
+  /*Make the preview image always DIN A4 Portrait*/
+  aspect-ratio: 210 / 297;
+
+  img {
+    /*Allow image to shrink*/
+    width: 0;
+    height: 0;
+    /*But always fill the entire frame*/
+    min-width: 100%;
+    min-height: 100%;
+    /*For other sizes, don't stretch the img*/
+    object-fit: contain;
+  }
+
+  /*Stop default margin from getting applied*/
+
+  &:not(:last-child) {
+    margin-bottom: 0;
+  }
+
+  /*Dark Mode*/
+
+  [data-theme="dark"] & {
+    filter: invert(100%) hue-rotate(180deg);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    filter: invert(100%) hue-rotate(180deg);
+
+    [data-theme="light"] & {
+      filter: none;
+    }
+  }
+}
+
+.document_card__preview {
+  grid-area: preview;
+  /* Backup to one line in old browsers */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+
+  /* Modern browsers: clamp to 3 lines */
+  @supports (-webkit-line-clamp: var(--preview-lines, 3)) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: initial;
+    display: -webkit-box;
+    -webkit-line-clamp: var(--preview-lines, 3);
+    -webkit-box-orient: vertical;
+  }
+}
+
+.document_card__title {
+  grid-area: title;
+  font-weight: bold;
+  /* Backup to one line in old browsers */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+
+  /* Modern browsers: clamp to 3 lines */
+  @supports (-webkit-line-clamp: var(--preview-lines, 3)) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: initial;
+    display: -webkit-box;
+    -webkit-line-clamp: var(--preview-lines, 3);
+    -webkit-box-orient: vertical;
+  }
+}
+
+.document_card__asn {
+  grid-area: asn;
+}
+
+.document_card__date {
+  grid-area: date;
+  display: none;
+}
+
+.document_card__tags {
+  grid-area: tags;
+
+  &:not(:last-child) {
+    margin-bottom: 0;
+  }
+}
+
+/*
+MARK: --full Grid Style
+*/
+.document_card_grid--full {
+  --gap: var(--bulma-box-padding, 1rem);
+
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  grid-auto-rows: 1fr;
+
+  .document_card {
+    grid-template-areas:
+      "media title"
+      "media preview"
+      "media tags"
+      "asn date";
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 3lh 3lh auto 1lh;
+    gap: var(--gap);
+    padding: var(--gap);
+  }
+
+  .document_card__media {
+    margin-left: calc(var(--gap) * -1);
+    margin-top: calc(var(--gap) * -1);
+  }
+
+  .document_card__asn {
+    text-align: center;
+    font-weight: bold;
+    margin-left: calc(var(--gap) * -1);
+  }
+
+  .document_card__date--long {
+    display: block;
+    opacity: 0.7;
+  }
+
+  .document_card__tags {
+    place-content: end start;
+  }
+
+  @container (width < 480px) {
+    .document_card {
+      /*Add more vertical preview space for narrow widths*/
+      --preview-lines: 4;
+
+      /*Everything below each other*/
+      grid-template-areas:
+        "media"
+        "title"
+        "preview"
+        "tags"
+        "date"
+        "asn";
+      grid-template-columns: 1fr;
+      grid-auto-rows: auto;
+      grid-template-rows: auto auto auto auto auto auto;
+    }
+
+    .document_card__media {
+      /*Avoid padding from parent*/
+      margin: calc(var(--gap) * -1);
+      margin-bottom: 0;
+    }
+
+    .document_card__asn {
+      margin: 0;
+      text-align: left;
+    }
+  }
+}
+
+/*
+MARK: --mini Grid Style
+*/
+.document_card_grid--mini {
+  --gap: var(--bulma-box-padding, 1rem);
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  grid-auto-rows: 1fr;
+  grid-auto-columns: 1fr;
+  gap: var(--gap);
+
+  .document_card__title,
+  .document_card__tags,
+  .document_card__preview {
+    display: none;
+  }
+
+  .document_card {
+    grid-template-areas:
+      "media"
+      "asn"
+      "date";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    padding: var(--gap);
+    text-align: center;
+  }
+
+  .document_card__media {
+    margin: calc(var(--gap) * -1);
+  }
+
+  .document_card__asn {
+    margin-top: calc(2 * var(--gap));
+    font-weight: bold;
+  }
+
+  .document_card__date--short {
+    display: block;
+    opacity: 0.7;
+  }
+}
+
+/*
+MARK: --small Grid Style
+*/
+.document_card_grid--small {
+  --gap: var(--bulma-box-padding, 1rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr));
+  grid-auto-rows: 1fr;
+  grid-auto-columns: 1fr;
+  gap: var(--gap);
+
+  .document_card__preview {
+    display: none;
+  }
+
+  .document_card {
+    grid-template-areas:
+      "media title title"
+      "media tags tags"
+      "media asn date";
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--bulma-box-padding, 1rem);
+    padding: var(--gap);
+
+    @container (max-width: 500px) {
+      --preview-lines: 2;
+      /*Everything below each other*/
+      grid-template-areas:
+        "title title"
+        "tags tags"
+        "asn asn"
+        "date date";
+      gap: 0;
+      grid-template-columns: 1fr;
+      grid-auto-rows: auto;
+      grid-template-rows: auto auto auto auto;
+
+      .document_card__title {
+        max-height: 2lh;
+      }
+
+      .document_card__tags {
+        margin-top: 0;
+        margin-block: var(--gap);
+      }
+
+      .document_card__media {
+        display: none;
+      }
+    }
+  }
+
+  .document_card__date--long {
+    display: block;
+    opacity: 0.7;
+  }
+
+  .document_card__media {
+    margin-left: calc(var(--gap) * -1);
+    margin-top: calc(var(--gap) * -1);
+    margin-bottom: calc(var(--gap) * -1);
+  }
+
+  .document_card__tags {
+    place-content: start;
+    margin-top: calc(var(--gap) * -1);
+    height: 1.5rem;
+    overflow: hidden;
+  }
+
+  .document_card__asn {
+    font-style: italic;
+  }
+}

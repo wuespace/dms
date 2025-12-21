@@ -1,0 +1,45 @@
+# Development setup (can be stripped for production)
+services:
+  dms-dev:
+    restart: no
+
+    command: ["--debug"] # Enable debug output during development
+
+    environment:
+      - DEVELOPMENT=true
+
+    volumes:
+      - ./ingest:/var/dms/ingest
+
+    build: .
+    develop:
+      watch:
+        - path: ./server
+          target: /app/server
+          action: sync+restart
+        - path: ./locales
+          target: /app/locales
+          action: sync+restart
+        - path: ./main.ts
+          target: /app/main.ts
+          action: sync+restart
+        - path: ./static
+          target: /app/static
+          action: sync
+        - path: ./config
+          target: /app/config
+          action: sync+restart
+        - path: ./deno.lock
+          action: rebuild
+        - path: ./client
+          action: rebuild
+        - path: ./theme.scss
+          action: rebuild
+        - path: ./scripts
+          action: rebuild
+  mongo:
+    ports:
+      - "27017:27017"
+  gotenberg:
+    ports:
+      - "3000:3000"

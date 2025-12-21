@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=./schema.json
+
+publicTags:
+  - public
+  - Vereinsöffentlich
+
+asnPrefix: WBD # WBD XX XXX
+asnGeneratorUrl: https://wbd.wuespace.de/
+
+folders:
+  - prefix: "[1-4]" # WBD [1-4]X XXX
+    label: Generischer Vereinsöffentlicher Ordner
+    read: [mitglied]
+    write: [mitglied]
+    registers:
+      0: Generische Vereinsöffentliche Dokumente (A)
+      1: Generische Vereinsöffentliche Dokumente (A)
+      2: Generische Vereinsöffentliche Dokumente (A)
+      3: Generische Vereinsöffentliche Dokumente (A)
+      4: Generische Vereinsöffentliche Dokumente (A)
+      5: Generische Vereinsöffentliche Dokumente (A)
+      6: Generische Vereinsöffentliche Dokumente (A)
+      7: Generische Vereinsöffentliche Dokumente (A)
+      8: Generische Vereinsöffentliche Dokumente (A)
+      9: Generische Vereinsöffentliche Dokumente (A)
+
+  - prefix: 5 # WBD 5X XXX
+    label: Manueller Vereinsöffentlicher Ordner
+    read: [mitglied]
+    write: [mitglied]
+    registers:
+      1: Beschlüsse, Vereinsordnungen, Satzung, Anhänge an Beschlüsse (A)
+      2: Protokolle (Vorstand, Mitgliederversammlung, etwaige andere Teams) (A)
+      5: Durch Paginierstempel 1 (aktuell bei Zuri Klaschka) nummerierte Schriftstücke (M)
+  - prefix: 6 # WBD 6X XXX
+    label: Finanzen
+    read: [kassenprueferli]
+    write: [finanzvorstand, vorstand]
+    registers:
+      0: Generische Dokumente bzgl. Finanzen (A)
+      1: Rechnungen. Dokumentennummerierung entspricht Rechnungsnummer (M)
+      2: Steuerunterlagen / Kommunikation mit dem Finanzamt (A)
+      3: Spendenbescheinigungen (A)
+  - prefix: 7 # WBD 7X XXX
+    label: Mitgliedschaft / DSGVO
+    read: [dsgvo]
+    write: [dsgvo]
+    registers:
+      0: Generische DSGVO-geschützte Dokumente (A)
+      1: Mitgliedsanträge. Dokumentennummer = Mitgliedsnummer (M)
+      2: Änderungen der Mitgliedschaft (keine Austritte), bspw. Stammdatenänderungen o. Ä. (A)
+      3: Austritte. Dokumentennummer = Mitgliednummer (M)
+      4: Empfehlungsschreiben für die Mitglieder (A)
+      5: DSGVO-Verarbeitungsverzeichnis (A)
+      6: Lizenzvereinbarungen (CLAs, Abweichungserklärungen gem. § 5 LizVO, etc.) (A)
+  - prefix: 8
+    label: Vorstandsinterna
+    read: [vorstand]
+    write: [vorstand]
+    registers:
+      0: Generische Vorstandsinterna (A)
+      1: ABgeschlossene Verträge des Vereins mit anderen Organisationen / Vereinen / Personen (A)
+      2: Kommunikation mit Gericht, Notar und Anwälten. Juristisches. (A)
+      3: Beschreibung öffentlicher Artefkate. Enthält (idealerweise) Dokumentation zu sämmtlichen öffentlichen Artefakten des Vereins, sei das die Website, Social Media Accounts, Open-Source-Software oder sonstige lizenzrechtlich relevante Artefakte. (A)
+  - prefix: 91 # WBD 91X XXX
+    label: Vertrauenspersonen
+    read: [vertrauenspersonen-int]
+    write: [vertrauenspersonen-int]
+    registers:
+      0: Generische Dokumente der Vertrauenspersonen (A)
+      2: Bekanntmachungen der Vertrauenspersonen. Werden zum passenden Zeitpunkt durch Public Tags im DMS öffentlich gemacht. (A)
+      3: Vertrauliche Kommunikation mit Mitgliedern des Vereins i. S. d. § 4 Abs. 3 CareVO. (A)

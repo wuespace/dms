@@ -1,0 +1,109 @@
+/* Compiled using `deno task compile:theme` */
+
+/* The Bulma dir automatically gets loaded => just reference the file inside the module */
+@use "sass/_index.scss" with (
+  $family-primary: '"Roboto", "Arial", sans-serif',
+  $primary: #452897,
+  $link: #452897,
+  $control-border-width: 2px,
+  $input-shadow: none,
+  $navbar-burger-color: white,
+  $panel-heading-size: 1em,
+);
+
+* {
+  box-sizing: border-box;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+:root {
+  --bulma-body-overflow-y: auto;
+}
+
+/* Application Layout */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: grid;
+  grid-template-areas: "header header" "sidebar main";
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 360px 1fr;
+
+  @media screen and (max-width: 768px) {
+    display: block;
+
+    > * {
+      overflow: visible !important;
+    }
+  }
+}
+
+#layout__header {
+  grid-area: header;
+}
+
+#layout__sidebar {
+  grid-area: sidebar;
+  @media screen and (min-width: 768px) {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+  }
+}
+
+#layout__main {
+  grid-area: main;
+  @media screen and (min-width: 768px) {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+  }
+}
+
+/* Tagify */
+.tags-input {
+  height: auto;
+
+  --tag-bg: var(--bulma-scheme-main-ter);
+  --tag-hover: var(--bulma-scheme-main-bis);
+  --tag-text-color: var(--bulma-text);
+  --tag-remove-bg: var(--bulma-danger-soft);
+  --tag-remove-btn-color: var(--bulma-danger-soft-invert);
+  --tag-remove-btn-bg: var(--bulma-danger-primary);
+  --tag-remove-btn-bg--hover: var(--bulma-danger-dark);
+  --input-color: var(--bulma-text);
+
+  --tag-invalid-bg: var(--bulma-warning-soft);
+  --tag-invalid-color: var(--bulma-warning-soft-invert);
+}
+
+:root {
+  --tagify-dd-color-primary: var(--bulma-primary);
+  --tagify-dd-bg-color: var(--bulma-scheme-main-bis);
+  --tagify-dd-text-color: var(--bulma-text);
+}
+
+/* FilePond */
+.file-upload {
+  cursor: pointer;
+
+  .filepond--drop-label {
+    color: var(--bulma-text);
+  }
+
+  .filepond--panel-root {
+    background: var(--bulma-scheme-main-bis);
+  }
+
+  &:hover {
+    .filepond--panel-root {
+      background: var(--bulma-scheme-main-ter);
+    }
+  }
+}

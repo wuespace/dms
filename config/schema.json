@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/WueSpaceDMSConfig",
+  "definitions": {
+    "WueSpaceDMSConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publicTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "asnPrefix": {
+          "type": "string"
+        },
+        "asnGeneratorUrl": {
+          "type": "string",
+          "format": "uri",
+          "qt-uri-protocols": ["https"]
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Folder"
+          }
+        }
+      },
+      "required": ["asnPrefix", "folders", "publicTags"],
+      "title": "WüSpace DMS Config"
+    },
+    "Folder": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {
+          "$ref": "#/definitions/Prefix"
+        },
+        "label": {
+          "type": "string"
+        },
+        "read": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "write": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "registers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["registers", "label", "prefix", "read", "write"],
+      "title": "Folder"
+    },
+    "Prefix": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Prefix"
+    }
+  }
+}

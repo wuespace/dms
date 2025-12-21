@@ -1,0 +1,23 @@
+/data
+/ingest
+*.pdf
+!sample.pdf
+!wbd-sample.pdf
+
+# Static Assets
+static/dist
+
+# Secrets
+.env
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea
+.vscode
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

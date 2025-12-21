@@ -1,0 +1,40 @@
+name: mongodb-dms
+
+services:
+  dms-dev:
+    image: ghcr.io/wuespace/dms
+    depends_on:
+      - mongo
+      - gotenberg
+    ports:
+      - "127.0.0.1:41319:41319"
+    restart: unless-stopped
+    volumes:
+      - dms-data:/app/data
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/mongodb-dms}
+      - OIDC_AUTH_SECRET=${OIDC_AUTH_SECRET:-$(openssl rand -hex 32)}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:?OAuth 2.0 Client ID from your OIDC provider}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:?OAuth 2.0 Client Secret from your OIDC provider}
+      - OIDC_ISSUER=${OIDC_ISSUER:?OIDC Issuer URL}
+      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:?OIDC Redirect URI}
+      - OIDC_SCOPES=${OIDC_SCOPES:?The scopes you want to request from the OIDC provider}
+      - OIDC_ROLES_CLAIM # optional, defaults to "roles"
+      - OIDC_UID_CLAIM # optional, defaults to "sub"
+      - OIDC_NAME_CLAIM # optional, defaults to "name"
+      - SENTRY_DSN # optional, defaults to sentry being disabled
+      - CONFIG_FILE # optional, defaults to "./config/config.yml"
+      - FOLDER_INGEST_CRON # optional, defaults to folder ingest being disabled
+      - FOLDER_INGEST_PATH # optional, defaults to folder ingest being disabled
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+
+volumes:
+  dms-data:
+  mongo-data:

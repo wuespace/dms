@@ -1,0 +1,45 @@
+repos:
+  - repo: local
+    hooks:
+      - id: deno-install
+        name: deno-install
+        description: "Install Deno dependencies and check that the deno.lock file is up to date"
+        language: system
+        entry: deno install --frozen
+        stages: [pre-commit]
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+      - id: deno-fmt
+        name: deno-fmt
+        entry: deno fmt
+        require_serial: true
+        language: system
+        pass_filenames: true
+        description: "Format code using Deno's built-in formatter"
+        stages: [pre-commit]
+      - id: deno-lint
+        name: deno-lint
+        entry: deno lint
+        language: system
+        # pass_filenames: false
+        files: \.(ts|tsx|js|jsx)$
+        description: "Lint code using Deno's built-in linter"
+        stages: [pre-commit]
+      - id: deno-check
+        name: deno-check
+        entry: deno check
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        # pass_filenames: false
+        description: "Type-check code using Deno's built-in type checker"
+        stages: [pre-commit]
+      - id: deno-check-i18n
+        name: deno-check-i18n
+        entry: deno task check:i18n
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        pass_filenames: false
+        always_run: true
+        description: "Run tests using Deno's built-in test runner"
+        stages: [pre-commit]
