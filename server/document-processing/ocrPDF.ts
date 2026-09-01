@@ -17,8 +17,8 @@ export async function ocrPDF(
       "-l",
       "deu+eng",
       "--deskew",
-      "--output-type",
-      "pdf",
+      // "--output-type",
+      // "pdf", // Runs into infinite https://github.com/ocrmypdf/OCRmyPDF/issues/1321
       "--rotate-pages",
       "--skip-text",
       // "--invalidate-digital-signatures", // TODO: Add back in once the Debian version supports it
