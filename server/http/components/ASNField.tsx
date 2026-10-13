@@ -9,14 +9,16 @@ import { useRequestContext } from "@hono/hono/jsx-renderer"
  * Props:
  * - value: The current value of the ASN input field.
  * - required: Whether the field is required.
+ * - readonly: Whether the value is fixed (it is still submitted with the form).
  * - form: The form attribute to associate the input with a specific form.
  * - asnGeneratorUrl: An optional URL to generate a new ASN.
  * Any `data-` attributes can also be passed and will be applied to the input element.
  */
 export function ASNField(
-  { value, required, form, asnGeneratorUrl, ...dataProps }: {
+  { value, required, readonly, form, asnGeneratorUrl, ...dataProps }: {
     value?: string
     required?: boolean
+    readonly?: boolean
     form?: string
     asnGeneratorUrl?: string
     [key: `data-${string}`]: unknown
@@ -26,7 +28,7 @@ export function ASNField(
     <div class="field">
       <label class="label" for="asn">
         {required ? t`Document Number *` : t`Document Number`}{" "}
-        <GenerateASNLink asnGeneratorUrl={asnGeneratorUrl} />
+        {!readonly && <GenerateASNLink asnGeneratorUrl={asnGeneratorUrl} />}
       </label>
       <div className="field has-addons">
         <p class="control">
@@ -44,6 +46,7 @@ export function ASNField(
             placeholder="XX XXX"
             value={value}
             required={required}
+            readonly={readonly}
             form={form}
             {...dataProps}
           />

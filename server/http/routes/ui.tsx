@@ -8,6 +8,7 @@ import { sentry } from "../middleware/sentry.ts"
 import { withConfig } from "../middleware/with-config.ts"
 import { withDB } from "../middleware/with-db.ts"
 import { withUser } from "../middleware/with-user.tsx"
+import { asnLinksRouter } from "./asn-links.tsx"
 import { archivedRouter } from "./archived.tsx"
 import { dashboardRouter } from "./dashboard.tsx"
 import { fileRouter } from "./files.tsx"
@@ -57,6 +58,7 @@ uiRouter.route("/files", fileRouter)
 uiRouter.route("/search", searchRouter)
 uiRouter.route("/archived", archivedRouter)
 uiRouter.route("/upload", uploadRouter)
+uiRouter.route("/asn-links", asnLinksRouter)
 uiRouter.route("/__/", uiSupportRouter)
 
 uiRouter.notFound((c) => {

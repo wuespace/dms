@@ -3,6 +3,11 @@ import { LocalizedHttpException, lt, t } from "@wuespace/honolate"
 import { dismissInboxDocument } from "../../document-lifecycle/inbox-dismiss.ts"
 import { inboxToArchive } from "../../document-lifecycle/inbox-to-archived.ts"
 import { InboxDocumentModel } from "../../model/documents/InboxDocument.ts"
+import {
+  ArchivedDocumentModel,
+  ASNPermissionError,
+} from "../../model/documents/ArchivedDocument.ts"
+import { AsnLinkError, AsnLinkModel } from "../../model/documents/AsnLink.ts"
 import { ActionButton } from "../components/ActionButton.tsx"
 import { DocumentCard } from "../components/DocumentCard.tsx"
 import { DocumentMetadataForm } from "../components/DocumentMetadataForm.tsx"
@@ -34,6 +39,8 @@ inboxRouter.get("/", async (c) => {
     })
   }
 
+  const archivedAsn = c.req.query("archived") ?? ""
+
   return c.render(
     <div class="section">
       <title>{t`Inbox - WüSpace DMS`}</title>
@@ -41,6 +48,11 @@ inboxRouter.get("/", async (c) => {
       <p class="subtitle is-4">
         {t`Your uploaded documents will appear here. Add metadata to archive them.`}
       </p>
+      {archivedAsn && (
+        <article class="notification is-success">
+          {t`The document has been archived as ${c.var.config.asnPrefix} ${archivedAsn}. You do not have access to view it.`}
+        </article>
+      )}
       <FileUpload />
       <div
         // Placeholder div to load unprocessed document notifications via htmx
@@ -130,6 +142,25 @@ inboxRouter.get("/:id", async (c) => {
     })
   }
 
+  // Archiving under an ASN via an ASN magic link fixes the ASN
+  const asnLinkToken = c.req.query("asnLink")
+  let linkedAsn: string | undefined
+  if (asnLinkToken) {
+    const links = new AsnLinkModel(c.var.db, c.var.user)
+    const [link, linkError] = await links.findValidByToken(asnLinkToken)
+    if (linkError) {
+      throw new LocalizedHttpException({
+        status: 410,
+        technicalMessage: "ASN link is invalid",
+        localizedTitle: lt`Link not valid`,
+        localizedMessage:
+          lt`This link is invalid, has expired, has already been used, or was revoked. Please ask the person who created it for a new one.`,
+        cause: linkError,
+      })
+    }
+    linkedAsn = link.asn
+  }
+
   return c.render(
     <WithPDFPreview pdfSrc={inboxDocument.processedFilePath.substring(4)}>
       <title>{t`Inbox: ${inboxDocument.suggestedTitle} - WüSpace DMS`}</title>
@@ -146,7 +177,8 @@ inboxRouter.get("/:id", async (c) => {
       </div>
       <DocumentMetadataForm
         title={inboxDocument.suggestedTitle}
-        asn={inboxDocument.suggestedASN}
+        asn={linkedAsn ?? inboxDocument.suggestedASN}
+        asnLinkToken={linkedAsn ? asnLinkToken : undefined}
         tags={inboxDocument.suggestedTags}
         content={inboxDocument.content}
         date={inboxDocument.date.toISOString().substring(0, 10)}
@@ -176,15 +208,32 @@ inboxRouter.post(
       })
     }
 
+    // Keep the (secret) link token out of the archived document data
+    const { asnLink, ...archivedDocumentData } = c.req.valid("form")
+
     const [archivedDocument, inboxToArchiveError] = await inboxToArchive(
       c.var.db,
       inboxDoc.id,
-      c.req.valid("form"),
+      archivedDocumentData,
       c.var.user,
       c.var.config,
+      asnLink,
     )
 
     if (inboxToArchiveError) {
+      if (
+        inboxToArchiveError instanceof ASNPermissionError ||
+        inboxToArchiveError instanceof AsnLinkError
+      ) {
+        throw new LocalizedHttpException({
+          status: 403,
+          technicalMessage: "Not allowed to archive under this number",
+          localizedTitle: lt`Not allowed to archive this document`,
+          localizedMessage:
+            lt`You do not have permission to archive documents under this number, or the link you used is no longer valid.`,
+          cause: inboxToArchiveError,
+        })
+      }
       throw new LocalizedHttpException({
         status: 500,
         technicalMessage: "Failed to archive document",
@@ -195,6 +244,19 @@ inboxRouter.post(
       })
     }
 
+    // Users who archived via an ASN link may not be able to read the document
+    const archivedCollection = new ArchivedDocumentModel(
+      c.var.db,
+      c.var.user,
+      c.var.config,
+    )
+    const canRead = archivedCollection.hasASNPermission(archivedDocument.asn) ||
+      archivedDocument.tags.some((tag) => c.var.config.publicTags.includes(tag))
+    if (!canRead) {
+      return c.redirect(
+        `/inbox?archived=${encodeURIComponent(archivedDocument.asn)}`,
+      )
+    }
     return c.redirect(`/archived/${archivedDocument.asn}`)
   },
 )

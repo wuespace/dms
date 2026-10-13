@@ -55,6 +55,15 @@ console.group("modules/async-form-validation.ts")
 
       const confirms = [] as string[]
 
+      // Send the other form values along so validators can take them into
+      // account (e.g., the tags when validating the ASN).
+      const formValues: Record<string, string> = {}
+      new FormData(form).forEach((value, key) => {
+        if (typeof value === "string") {
+          formValues[key] = value
+        }
+      })
+
       try {
         for (const field of Array.from(fields)) {
           field.setCustomValidity("")
@@ -68,6 +77,7 @@ console.group("modules/async-form-validation.ts")
               },
               body: JSON.stringify({
                 value: field.value,
+                form: formValues,
               }),
             },
           )
