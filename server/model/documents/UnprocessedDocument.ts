@@ -15,8 +15,12 @@ export interface UnprocessedDocument {
 }
 
 export class UnprocessedDocumentModel extends OwnedModel<UnprocessedDocument> {
-  constructor(db: Database, user: User) {
-    super(db, user)
+  /**
+   * @param enforceOwnership set to `false` to access the unprocessed documents
+   * of all users (e.g., for maintenance tasks).
+   */
+  constructor(db: Database, user: User, enforceOwnership = true) {
+    super(db, user, enforceOwnership)
   }
 
   override get collection() {

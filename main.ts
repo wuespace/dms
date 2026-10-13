@@ -5,6 +5,7 @@ import { getDB } from "./server/db/getDB.ts"
 import { getConfig } from "./server/getConfig.ts"
 import { runServer } from "./server/http/mod.ts"
 import { initFolderIngest } from "./server/ingest/mod.ts"
+import { initUnprocessedCleanup } from "./server/document-lifecycle/unprocessed-cleanup-cron.ts"
 import { getLogger } from "./server/log.ts"
 
 const logger = getLogger("main")
@@ -32,6 +33,7 @@ if (import.meta.main) {
 
     // Initialize background tasks
     await initFolderIngest()
+    await initUnprocessedCleanup()
 
     // Start the server
     await runServer()
@@ -74,6 +76,12 @@ async function setupEnvironment() {
     initVariable("CONFIG", z.string()),
     initVariable("FOLDER_INGEST_CRON", z.string().optional()),
     initVariable("FOLDER_INGEST_PATH", z.string().optional()),
+    initVariable("UNPROCESSED_CLEANUP_CRON", z.string(), "0 3 * * *"),
+    initVariable(
+      "UNPROCESSED_CLEANUP_MAX_AGE_DAYS",
+      z.coerce.number().positive(),
+      "2",
+    ),
   ]).catch((e) => {
     logger.withError(e).fatal("Failed to initialize environment variables.")
     Deno.exit(1)
