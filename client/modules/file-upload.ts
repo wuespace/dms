@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 console.group("modules/file-upload.ts")
 import * as FilePond from "npm:filepond@4.32.9"
 import "npm:filepond@4.32.9/dist/filepond.min.css"
@@ -116,7 +118,7 @@ const labels_de_DE = {
       name: "files",
       ...(document.documentElement.lang === "de" ? { ...labels_de_DE } : {}),
       server: {
-        process: "./upload", // POST to /upload
+        process: "/upload", // POST to /upload
         fetch: null, // disable fetching the uploaded file
         revert: null, // disable reverting the upload from the form
       },

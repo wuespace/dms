@@ -11,10 +11,15 @@ import { ArchivedDocumentModel } from "../../model/documents/ArchivedDocument.ts
 import { getVisibleTags, parseTags } from "../../model/tags.ts"
 import { withConfig } from "../middleware/with-config.ts"
 import { withDB } from "../middleware/with-db.ts"
+import { AsnLinkModel } from "../../model/documents/AsnLink.ts"
 import { withUser } from "../middleware/with-user.tsx"
 
 export const validatorValidator = validator("json", (x: unknown) => {
-  return z.object({ value: z.string() }).parse(x) as { value: string }
+  return z.object({
+    value: z.string(),
+    // The other values of the form the field belongs to
+    form: z.record(z.string(), z.string()).optional(),
+  }).parse(x)
 })
 
 export const uiSupportRouter = new Hono()
@@ -80,7 +85,7 @@ export const uiSupportRouter = new Hono()
   // MARK: /__/validator/archive-asn
   // data-validator="archive-asn"
   .post("/validator/archive-asn", validatorValidator, async (c) => {
-    const asn = c.req.valid("json").value
+    const { value: asn, form } = c.req.valid("json")
     const model = new ArchivedDocumentModel(c.var.db, c.var.user, c.var.config)
 
     if (!asn.trim()) {
@@ -105,8 +110,16 @@ export const uiSupportRouter = new Hono()
       )
     }
 
+    // Users without write access can still archive under this exact ASN if
+    // they redeemed a valid ASN magic link for it.
+    let viaLink = false
     const isAllowed = model.hasASNPermission(asn, true)
-    if (!isAllowed) {
+    if (!isAllowed && form?.asnLink) {
+      const links = new AsnLinkModel(c.var.db, c.var.user)
+      const [link] = await links.findValidByToken(form.asnLink, asn)
+      viaLink = !!link
+    }
+    if (!isAllowed && !viaLink) {
       return c.text(
         t`You do not have permission to archive documents in the folder ${c.var.config.asnPrefix} ${folder.prefix}: ${folder.label}.`,
         403,
@@ -128,6 +141,22 @@ export const uiSupportRouter = new Hono()
         t`A document with the number ${c.var.config.asnPrefix} ${asn} has already been archived.`,
         400,
       )
+    }
+
+    if (viaLink) {
+      // The user won't be able to see the document afterwards unless it has
+      // a public tag.
+      const [tags] = parseTags(form?.tags ?? "")
+      const isPublic = tags?.some((tag) =>
+        c.var.config.publicTags.includes(tag)
+      )
+      if (!isPublic) {
+        // 202 = Accepted (needs confirmation)
+        return c.text(
+          t`You do not have access to the folder ${c.var.config.asnPrefix} ${folder.prefix}: ${folder.label}. If you archive this document under ${c.var.config.asnPrefix} ${asn} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed.`,
+          202,
+        )
+      }
     }
 
     return c.text("Valid ASN.", 200)

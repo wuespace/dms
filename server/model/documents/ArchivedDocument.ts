@@ -26,6 +26,9 @@ export interface ArchivedDocument {
   }
 }
 
+/** The user may not write to the requested ASN. */
+export class ASNPermissionError extends Error {}
+
 export class ArchivedDocumentModel extends BaseModel<ArchivedDocument> {
   constructor(
     db: Database,
@@ -81,23 +84,36 @@ export class ArchivedDocumentModel extends BaseModel<ArchivedDocument> {
     ])
   }
 
+  /**
+   * Inserts a new archived document.
+   * @param document the document to insert
+   * @param options.authorizedByLink set to `true` if the caller has already
+   * redeemed a valid ASN magic link for `document.asn`. Skips only the ASN
+   * write-permission check.
+   */
   insert(
     document: ArchivedDocument,
+    options: { authorizedByLink?: boolean } = {},
   ) {
-    if (!this.hasASNPermission(document.asn, true)) {
+    if (
+      !options.authorizedByLink && !this.hasASNPermission(document.asn, true)
+    ) {
       return [
         null,
-        new Error("User does not have permission to write to ASN", {
-          cause: {
-            asn: document.asn,
-            userRoles: this.user.roles,
-            authorizedPatterns: getAuthorizedPatterns(
-              this.user,
-              this.config,
-              true,
-            ).map((p) => p.source),
+        new ASNPermissionError(
+          "User does not have permission to write to ASN",
+          {
+            cause: {
+              asn: document.asn,
+              userRoles: this.user.roles,
+              authorizedPatterns: getAuthorizedPatterns(
+                this.user,
+                this.config,
+                true,
+              ).map((p) => p.source),
+            },
           },
-        }),
+        ),
       ] as const
     }
     return this._insertOne(document)

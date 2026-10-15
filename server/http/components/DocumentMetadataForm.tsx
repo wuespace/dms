@@ -18,6 +18,7 @@ import { DateDisplay } from "./DateDisplay.tsx"
  * - tags: An array of tags associated with the document.
  * - action: Optional URL to submit the form to. If not provided, the form is read-only.
  * - asnGeneratorUrl: Optional URL to generate a new ASN.
+ * - asnLinkToken: Optional ASN magic link token; fixes the ASN to the link's ASN.
  * @returns A form element for editing or displaying document metadata.
  */
 export function DocumentMetadataForm({
@@ -28,6 +29,7 @@ export function DocumentMetadataForm({
   tags,
   action,
   asnGeneratorUrl,
+  asnLinkToken,
 }: DocumentMetadataFormProps) {
   if (!action) {
     return (
@@ -90,9 +92,13 @@ export function DocumentMetadataForm({
           required
         />
       </div>
+      {asnLinkToken && (
+        <input type="hidden" name="asnLink" value={asnLinkToken} />
+      )}
       <ASNField
         value={asn}
         required
+        readonly={!!asnLinkToken}
         asnGeneratorUrl={asnGeneratorUrl}
         data-validator="archive-asn"
       />
@@ -129,4 +135,5 @@ export interface DocumentMetadataFormProps {
   tags: string[]
   action?: string
   asnGeneratorUrl?: string
+  asnLinkToken?: string
 }

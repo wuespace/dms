@@ -5,6 +5,7 @@ import {
   ArchivedDocumentModel,
 } from "../model/documents/ArchivedDocument.ts"
 import { InboxDocumentModel } from "../model/documents/InboxDocument.ts"
+import { AsnLinkModel } from "../model/documents/AsnLink.ts"
 import { parseTags } from "../model/tags.ts"
 import type { User } from "../model/user.ts"
 import type { AsyncResult } from "../result.ts"
@@ -17,6 +18,7 @@ export async function inboxToArchive(
   archivedDocumentData: Partial<ArchivedDocument>,
   user: User,
   config: Config,
+  asnLinkToken?: string,
 ): AsyncResult<ArchivedDocument, Error> {
   const logger = getLogger("inbox-to-archive").withContext({
     userId: user.id,
@@ -114,13 +116,42 @@ export async function inboxToArchive(
     ]
   }
 
+  // A supplied ASN magic link is consumed whenever it is valid, so that it
+  // shows as used afterwards. It is only required if the user can't write to
+  // the ASN themselves.
+  const asnLinks = new AsnLinkModel(db, user)
+  let consumedLinkId: string | undefined
+  if (asnLinkToken) {
+    const [link, linkError] = await asnLinks.consume(
+      asnLinkToken,
+      archivedDocument.asn,
+    )
+    if (!linkError) {
+      consumedLinkId = link.id
+      logger.withContext({ asnLinkId: link.id }).info("Redeemed ASN link.")
+    } else if (
+      !archivedCollection.hasASNPermission(archivedDocument.asn, true)
+    ) {
+      logger.withError(linkError).warn("ASN link could not be redeemed.")
+      return [null, linkError]
+    }
+  }
+
   // We're all good – move the document to the archive
   const [insertResult, insertError] = await archivedCollection.insert(
     archivedDocument,
+    { authorizedByLink: !!consumedLinkId },
   )
   logger.withContext({ insertResult: redactContent(insertResult) })
 
   if (insertError) {
+    if (consumedLinkId) {
+      // Don't burn the link because of an unrelated failure
+      const [_released, releaseError] = await asnLinks.release(consumedLinkId)
+      if (releaseError) {
+        logger.withError(releaseError).error("Failed to release ASN link.")
+      }
+    }
     logger.withError(insertError).error("Error inserting archived document.")
     return [
       null,

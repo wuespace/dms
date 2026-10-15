@@ -46,6 +46,11 @@ dashboardRouter
             href={c.var.config.asnGeneratorUrl}
           />
         )}
+        <LinkCard
+          title={t`Document number links`}
+          subtitle={t`Allow someone without access to a folder to archive a document under a specific document number.`}
+          href="/asn-links"
+        />
         <div className="panel">
           <h2 className="panel-heading">
             {t`Upload a document`}

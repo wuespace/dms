@@ -6,6 +6,10 @@ export interface ActionButtonProps {
    */
   color?: "primary" | "danger"
   /**
+   * Renders a smaller button, e.g. for use inside tables.
+   */
+  small?: boolean
+  /**
    * The HTTP method to use when submitting the form.
    */
   method: "get" | "post"
@@ -39,6 +43,7 @@ export function ActionButton(props: ActionButtonProps) {
           "button",
           props.color === "primary" && "is-primary",
           props.color === "danger" && "is-danger",
+          props.small && "is-small",
         )}
         title={props.title}
       >

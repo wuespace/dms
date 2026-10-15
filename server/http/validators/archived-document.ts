@@ -8,6 +8,7 @@ export const archivedDocumentValidator = validator("form", (value) => {
     title: z.string().min(1).max(512),
     asn: z.string().min(1).max(32),
     date: z.coerce.date(),
+    asnLink: z.string().min(1).max(256).optional(),
   }).safeParse(value)
 
   if (!success) {
