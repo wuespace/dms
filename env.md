@@ -261,3 +261,27 @@ SENTRY_DSN="https://xxx.glitchtip.example.com/xxx"
 ```env
 SENTRY_DSN="https://xxx@xxx.ingest.us.sentry.io/xxx"
 ```
+
+## Unprocessed Document Cleanup
+
+### `UNPROCESSED_CLEANUP_CRON` (optional)
+
+Documents that were uploaded but never finished processing (e.g., because the
+server shut down) are removed periodically. The CRON expression that determines
+how often stale documents are removed.
+
+#### Default Value (used by the application if not provided)
+
+```env
+UNPROCESSED_CLEANUP_CRON="0 3 * * *"
+```
+
+### `UNPROCESSED_CLEANUP_MAX_AGE_DAYS` (optional)
+
+The age in days after which an unprocessed document is considered stale.
+
+#### Default Value (used by the application if not provided)
+
+```env
+UNPROCESSED_CLEANUP_MAX_AGE_DAYS=2
+```
