@@ -38,12 +38,15 @@ export function initUnprocessedCleanup() {
         logger.withError(dbError).error("Could not connect to the database.")
         return
       }
-      try {
-        const result = await cleanUpStaleUnprocessedDocuments(db, maxAgeMs)
-        logger.withMetadata(result).info("Unprocessed cleanup run complete.")
-      } catch (error) {
-        logger.withError(error as Error).error("Unprocessed cleanup failed.")
+      const [result, cleanupError] = await cleanUpStaleUnprocessedDocuments(
+        db,
+        maxAgeMs,
+      )
+      if (cleanupError) {
+        logger.withError(cleanupError).error("Unprocessed cleanup failed.")
+        return
       }
+      logger.withMetadata(result).info("Unprocessed cleanup run complete.")
     })
 
   let [cronJob, cronError] = wrap(() => new Cron(cronEnv, run))

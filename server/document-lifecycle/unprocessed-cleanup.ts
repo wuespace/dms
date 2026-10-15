@@ -9,6 +9,7 @@ import {
 import { getLogger } from "../log.ts"
 import { UnprocessedDocumentModel } from "../model/documents/UnprocessedDocument.ts"
 import { SYSTEM_USER } from "../model/user.ts"
+import { AsyncResult, wrapAsync } from "../result.ts"
 
 /**
  * Determines whether an unprocessed document is older than `maxAgeMs`.
@@ -42,20 +43,21 @@ export function isStale(
  * @param db the database
  * @param maxAgeMs the maximum age of an unprocessed document in milliseconds
  * @param now the current time
- * @returns the number of removed and failed documents
+ * @returns the number of removed and failed documents, or an error if the
+ * documents could not be loaded
  */
 export async function cleanUpStaleUnprocessedDocuments(
   db: Database,
   maxAgeMs: number,
   now: Date = new Date(),
-): Promise<{ removed: number; failed: number }> {
+): AsyncResult<{ removed: number; failed: number }, Error> {
   const logger = getLogger("unprocessed-cleanup")
   const collection = new UnprocessedDocumentModel(db, SYSTEM_USER, false)
 
   const [documents, getError] = await collection.get({})
   if (getError) {
     logger.withError(getError).error("Failed to load unprocessed documents.")
-    throw getError
+    return [null, getError]
   }
 
   const uploadDirectory = getDataDirectory("unprocessed")
@@ -71,28 +73,37 @@ export async function cleanUpStaleUnprocessedDocuments(
       userId: document.userId,
     })
 
-    try {
-      // Only delete files we own. Files ingested from the ingest folder live
-      // elsewhere and may have been picked up again by the folder ingest.
-      const relativePath = relative(uploadDirectory, document.path)
-      if (!relativePath.startsWith("..") && !isAbsolute(relativePath)) {
-        await ensureDoesntExist(document.path)
-      }
-      await ensureDoesntExist(getTempDirectory(document.id))
+    // Only delete files we own. Files ingested from the ingest folder live
+    // elsewhere and may have been picked up again by the folder ingest.
+    const relativePath = relative(uploadDirectory, document.path)
+    const ownsFile = !relativePath.startsWith("..") && !isAbsolute(relativePath)
 
-      const [_result, removeError] = await collection.remove(document.id)
-      if (removeError) {
-        throw removeError
-      }
-      removed++
-      docLogger.info("Removed stale unprocessed document.")
-    } catch (error) {
+    const [_fileRes, fileError] = await wrapAsync(
+      ownsFile ? ensureDoesntExist(document.path) : Promise.resolve(),
+    )
+    const [_tempRes, tempError] = await wrapAsync(
+      ensureDoesntExist(getTempDirectory(document.id)),
+    )
+    const cleanupError = fileError ?? tempError
+    if (cleanupError) {
       failed++
-      docLogger.withError(error as Error).error(
+      docLogger.withError(cleanupError).error(
+        "Failed to remove files of stale unprocessed document.",
+      )
+      continue
+    }
+
+    const [_result, removeError] = await collection.remove(document.id)
+    if (removeError) {
+      failed++
+      docLogger.withError(removeError).error(
         "Failed to remove stale unprocessed document.",
       )
+      continue
     }
+    removed++
+    docLogger.info("Removed stale unprocessed document.")
   }
 
-  return { removed, failed }
+  return [{ removed, failed }, null]
 }
