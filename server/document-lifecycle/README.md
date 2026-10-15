@@ -13,6 +13,7 @@ stateDiagram-v2
 UnprocessedDocument --> InboxDocument: successful processing
 InboxDocument --> [*]: Discard Document
 
+UnprocessedDocument --> [*]: stale (cleanup job)
 UnprocessedDocument --> ProcessingError: error while processing
 ProcessingError --> [*]: Discard Error
 
