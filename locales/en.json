@@ -170,5 +170,6 @@
   "The document has been archived as {0} {1}. You do not have access to view it.": "The document has been archived as {0} {1}. You do not have access to view it.",
   "Not allowed to archive this document": "Not allowed to archive this document",
   "You do not have permission to archive documents under this number, or the link you used is no longer valid.": "You do not have permission to archive documents under this number, or the link you used is no longer valid.",
-  "You do not have access to the folder {0} {1}: {2}. If you archive this document under {3} {4} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed.": "You do not have access to the folder {0} {1}: {2}. If you archive this document under {3} {4} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed."
+  "You do not have access to the folder {0} {1}: {2}. If you archive this document under {3} {4} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed.": "You do not have access to the folder {0} {1}: {2}. If you archive this document under {3} {4} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed.",
+  "Create a new link": "Create a new link"
 }

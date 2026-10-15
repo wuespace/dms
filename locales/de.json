@@ -170,5 +170,6 @@
   "The document has been archived as {0} {1}. You do not have access to view it.": "Das Dokument wurde als {0} {1} archiviert. Du hast keinen Zugriff, um es anzusehen.",
   "Not allowed to archive this document": "Archivierung dieses Dokuments nicht erlaubt",
   "You do not have permission to archive documents under this number, or the link you used is no longer valid.": "Du hast keine Berechtigung, Dokumente unter dieser Nummer zu archivieren, oder der verwendete Link ist nicht mehr gültig.",
-  "You do not have access to the folder {0} {1}: {2}. If you archive this document under {3} {4} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed.": "Du hast keinen Zugriff auf den Ordner {0} {1}: {2}. Wenn du dieses Dokument unter {3} {4} ohne öffentlichen Tag archivierst, kannst du es danach weder ansehen noch bearbeiten. Bitte bestätige, dass du fortfahren möchtest."
+  "You do not have access to the folder {0} {1}: {2}. If you archive this document under {3} {4} without a public tag, you will not be able to view or edit it afterwards. Please confirm that you want to proceed.": "Du hast keinen Zugriff auf den Ordner {0} {1}: {2}. Wenn du dieses Dokument unter {3} {4} ohne öffentlichen Tag archivierst, kannst du es danach weder ansehen noch bearbeiten. Bitte bestätige, dass du fortfahren möchtest.",
+  "Create a new link": "Neuen Link erstellen"
 }

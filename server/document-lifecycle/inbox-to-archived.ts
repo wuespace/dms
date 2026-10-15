@@ -116,24 +116,25 @@ export async function inboxToArchive(
     ]
   }
 
-  // If the user can't write to the ASN themselves, they may still archive
-  // under it by redeeming an ASN magic link bound to exactly this ASN.
+  // A supplied ASN magic link is consumed whenever it is valid, so that it
+  // shows as used afterwards. It is only required if the user can't write to
+  // the ASN themselves.
   const asnLinks = new AsnLinkModel(db, user)
   let consumedLinkId: string | undefined
-  if (
-    asnLinkToken &&
-    !archivedCollection.hasASNPermission(archivedDocument.asn, true)
-  ) {
+  if (asnLinkToken) {
     const [link, linkError] = await asnLinks.consume(
       asnLinkToken,
       archivedDocument.asn,
     )
-    if (linkError) {
+    if (!linkError) {
+      consumedLinkId = link.id
+      logger.withContext({ asnLinkId: link.id }).info("Redeemed ASN link.")
+    } else if (
+      !archivedCollection.hasASNPermission(archivedDocument.asn, true)
+    ) {
       logger.withError(linkError).warn("ASN link could not be redeemed.")
       return [null, linkError]
     }
-    consumedLinkId = link.id
-    logger.withContext({ asnLinkId: link.id }).info("Redeemed ASN link.")
   }
 
   // We're all good – move the document to the archive

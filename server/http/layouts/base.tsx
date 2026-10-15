@@ -147,6 +147,14 @@ export const BaseLayout = (
                   {t`Upload a Document`}
                 </a>
               </li>
+              <li>
+                <a
+                  href="/asn-links"
+                  class={isActive("/asn-links")}
+                >
+                  {t`Document number links`}
+                </a>
+              </li>
             </ul>
             <p className="menu-label">
               {t`User`}

@@ -1,4 +1,5 @@
 import { Hono } from "@hono/hono"
+import { css, cx } from "@hono/hono/css"
 import { LocalizedHttpException, lt, t } from "@wuespace/honolate"
 import { z } from "@zod/zod"
 import { getLogger } from "../../log.ts"
@@ -11,6 +12,7 @@ import { ArchivedDocumentModel } from "../../model/documents/ArchivedDocument.ts
 import { AsnLinkModel } from "../../model/documents/AsnLink.ts"
 import { InboxDocumentModel } from "../../model/documents/InboxDocument.ts"
 import { ActionButton } from "../components/ActionButton.tsx"
+import { DateDisplay } from "../components/DateDisplay.tsx"
 import { ASNField } from "../components/ASNField.tsx"
 import { DocumentCard } from "../components/DocumentCard.tsx"
 import { DocumentGrid } from "../components/DocumentGrid.tsx"
@@ -52,74 +54,146 @@ asnLinksRouter.get("/", async (c) => {
     expired: t`Expired`,
   }
 
+  const statusColors = {
+    valid: "is-success",
+    used: "is-info",
+    revoked: "is-danger",
+    expired: "is-warning",
+  }
+
   return c.render(
     <div class="section">
       <title>{t`Document number links - WüSpace DMS`}</title>
       <h1 class="title is-2">{t`Document number links`}</h1>
-      <p class="subtitle is-4">
+      <p class="subtitle is-5">
         {t`Create a one-time link that allows any user to archive a document under a specific document number, even without access to its folder.`}
       </p>
-      <form
-        method="post"
-        action="/asn-links"
-        class="block"
-        data-validate
-      >
-        <ASNField required data-validator="archive-asn" />
-        <div class="field">
-          <label class="label" for="ttlDays">{t`Valid for`}</label>
-          <div class="select">
-            <select name="ttlDays" id="ttlDays">
-              {TTL_OPTIONS_DAYS.map((days) => (
-                <option value={days} selected={days === DEFAULT_TTL_DAYS}>
-                  {t`${days} days`}
-                </option>
-              ))}
-            </select>
+      <div class="card block">
+        <header class="card-header">
+          <h2 class="card-header-title">{t`Create a new link`}</h2>
+        </header>
+        <form
+          method="post"
+          action="/asn-links"
+          class={cx(
+            "card-content",
+            css`
+              display: flex;
+              flex-wrap: wrap;
+              align-items: flex-end;
+              gap: 1rem;
+              .field {
+                margin-bottom: 0;
+              }
+              .asn-link-form__asn {
+                flex: 1 1 16rem;
+              }
+            `,
+          )}
+          data-validate
+        >
+          <div class="asn-link-form__asn">
+            <ASNField required data-validator="archive-asn" />
           </div>
-        </div>
-        <button class="button is-primary" type="submit">
-          {t`Create link`}
-        </button>
-      </form>
+          <div class="field">
+            <label class="label" for="ttlDays">{t`Valid for`}</label>
+            <div class="control">
+              <div class="select">
+                <select name="ttlDays" id="ttlDays">
+                  {TTL_OPTIONS_DAYS.map((days) => (
+                    <option value={days} selected={days === DEFAULT_TTL_DAYS}>
+                      {t`${days} days`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <button class="button is-primary" type="submit">
+              {t`Create link`}
+            </button>
+          </div>
+        </form>
+      </div>
       <h2 class="title is-4">{t`Your links`}</h2>
       {asnLinks.length === 0
-        ? <p>{t`You have not created any links yet.`}</p>
+        ? (
+          <div class="notification">
+            {t`You have not created any links yet.`}
+          </div>
+        )
         : (
-          <table class="table is-fullwidth">
-            <thead>
-              <tr>
-                <th>{c.var.config.asnPrefix}</th>
-                <th>{t`Status`}</th>
-                <th>{t`Expires`}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {asnLinks.map((link) => {
-                const status = getAsnLinkStatus(link)
-                return (
-                  <tr key={link.id}>
-                    <td>{c.var.config.asnPrefix}&nbsp;{link.asn}</td>
-                    <td>{statusLabels[status]}</td>
-                    <td>{link.expiresAt.toISOString().substring(0, 10)}</td>
-                    <td>
-                      {status === "valid" && (
-                        <ActionButton
-                          method="post"
-                          action={`/asn-links/${link.id}/revoke`}
-                          color="danger"
-                          confirm={t`Are you sure you want to revoke this link? It will stop working immediately.`}
-                        >
-                          {t`Revoke`}
-                        </ActionButton>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div class="table-container">
+            <table
+              class={cx(
+                "table is-fullwidth is-hoverable",
+                css`
+                  td, th {
+                    vertical-align: middle;
+                  }
+                  td {
+                    height: 3.5rem;
+                  }
+                `,
+              )}
+            >
+              <thead>
+                <tr>
+                  <th>{c.var.config.asnPrefix}</th>
+                  <th>{t`Status`}</th>
+                  <th>{t`Expires`}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {asnLinks.map((link) => {
+                  const status = getAsnLinkStatus(link)
+                  const folder = getFolderInformation(link.asn, c.var.config)
+                  const register = getRegisterInformation(
+                    link.asn,
+                    c.var.config,
+                  )
+                  return (
+                    <tr key={link.id}>
+                      <td>
+                        <strong>
+                          {c.var.config.asnPrefix}&nbsp;{link.asn}
+                        </strong>
+                        {folder && (
+                          <p class="is-size-7 has-text-grey">
+                            {folder.label}
+                            {register && ` › ${register.register}`}
+                          </p>
+                        )}
+                      </td>
+                      <td>
+                        <span class={`tag ${statusColors[status]}`}>
+                          {statusLabels[status]}
+                        </span>
+                      </td>
+                      <td>
+                        <DateDisplay date={link.expiresAt} />
+                      </td>
+                      <td class="has-text-right">
+                        {status === "valid" && (
+                          <ActionButton
+                            method="post"
+                            action={`/asn-links/${link.id}/revoke`}
+                            color="danger"
+                            small
+                            confirm={t`Are you sure you want to revoke this link? It will stop working immediately.`}
+                          >
+                            {t`Revoke`}
+                          </ActionButton>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
     </div>,
   )
@@ -191,11 +265,11 @@ asnLinksRouter.post("/", async (c) => {
     <div class="section">
       <title>{t`Document number link created - WüSpace DMS`}</title>
       <h1 class="title is-2">{t`Link created`}</h1>
-      <p class="block">
+      <div class="notification is-success is-light">
         {t`Share this link with the person who should archive a document as ${c.var.config.asnPrefix} ${asn}. It can be used once and is valid until ${
           created.link.expiresAt.toISOString().substring(0, 10)
         }. For security reasons, it will not be shown again.`}
-      </p>
+      </div>
       <div class="field">
         <input
           class="input"
@@ -205,7 +279,7 @@ asnLinksRouter.post("/", async (c) => {
           onfocus="this.select()"
         />
       </div>
-      <a class="button" href="/asn-links">{t`Back to your links`}</a>
+      <a class="button is-primary" href="/asn-links">{t`Back to your links`}</a>
     </div>,
   )
 })
