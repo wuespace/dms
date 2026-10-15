@@ -1,11 +1,7 @@
 import type { Database } from "@db/mongo"
-import { isAbsolute, relative } from "@std/path"
 import { decodeTime } from "@std/ulid"
-import {
-  ensureDoesntExist,
-  getDataDirectory,
-  getTempDirectory,
-} from "../fs/mod.ts"
+import { ensureDoesntExist, getTempDirectory } from "../fs/mod.ts"
+import { isInFolderIngestPath } from "../ingest/mod.ts"
 import { getLogger } from "../log.ts"
 import { UnprocessedDocumentModel } from "../model/documents/UnprocessedDocument.ts"
 import { SYSTEM_USER } from "../model/user.ts"
@@ -38,8 +34,8 @@ export function isStale(
  * Removes unprocessed documents older than `maxAgeMs`.
  *
  * Documents stay "unprocessed" forever if the server shuts down while they are
- * being processed. This removes their database entries and, if they live in
- * the upload directory, their files.
+ * being processed. This removes their database entries and, unless they
+ * live in the folder-ingest folder, their files.
  * @param db the database
  * @param maxAgeMs the maximum age of an unprocessed document in milliseconds
  * @param now the current time
@@ -60,7 +56,6 @@ export async function cleanUpStaleUnprocessedDocuments(
     return [null, getError]
   }
 
-  const uploadDirectory = getDataDirectory("unprocessed")
   let removed = 0
   let failed = 0
 
@@ -73,13 +68,12 @@ export async function cleanUpStaleUnprocessedDocuments(
       userId: document.userId,
     })
 
-    // Only delete files we own. Files ingested from the ingest folder live
-    // elsewhere and may have been picked up again by the folder ingest.
-    const relativePath = relative(uploadDirectory, document.path)
-    const ownsFile = !relativePath.startsWith("..") && !isAbsolute(relativePath)
-
+    // Files in the ingest folder are not ours to delete: the folder ingest
+    // picks them up again on its next run.
     const [_fileRes, fileError] = await wrapAsync(
-      ownsFile ? ensureDoesntExist(document.path) : Promise.resolve(),
+      isInFolderIngestPath(document.path)
+        ? Promise.resolve()
+        : ensureDoesntExist(document.path),
     )
     const [_tempRes, tempError] = await wrapAsync(
       ensureDoesntExist(getTempDirectory(document.id)),

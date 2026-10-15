@@ -1,10 +1,25 @@
 import { Cron } from "@hexagon/croner"
 import { exists } from "@std/fs"
-import { resolve } from "@std/path"
+import { isAbsolute, relative, resolve } from "@std/path"
 import { ingestDocument } from "../ingest-document.ts"
 import { wrap } from "../../result.ts"
 import { getLogger, runWithLogContext } from "../../log.ts"
 import { redactContent } from "../../document-lifecycle/util/redact.ts"
+
+/**
+ * Determines whether a file lives in the folder-ingest folder
+ * (`FOLDER_INGEST_PATH`), i.e., whether it was (or can be) ingested from there.
+ * @param path path to the file
+ * @returns `true` if the file is located in the folder-ingest folder
+ */
+export function isInFolderIngestPath(path: string): boolean {
+  const ingestPath = Deno.env.get("FOLDER_INGEST_PATH")
+  if (!ingestPath) {
+    return false
+  }
+  const relativePath = relative(resolve(ingestPath), resolve(path))
+  return !relativePath.startsWith("..") && !isAbsolute(relativePath)
+}
 
 /**
  * Initializes / starts the folder-based background ingest process.
